@@ -1,2 +1,3 @@
-source ~/pygame/bin/activate
-nvim
+#!/bin/sh
+. ~/pygame/bin/activate
+nvim test.py
