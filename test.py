@@ -26,9 +26,8 @@ class Player():
         pygame.draw.rect(screen, "blue", self.get_box_collider())
         pygame.draw.circle(screen, "purple", self.pos, self.radius)
 
-    def collides_with_rect(self, rect: pygame.Rect):
+    def get_closest_point_to(seklf, rect: pygame.Rect):
         closest_point = pygame.Vector2(player.pos.x, player.pos.y)
-
         if closest_point.x < rect.x:
             closest_point.x = rect.x
         if closest_point.x > rect.x + rect.width:
@@ -37,13 +36,49 @@ class Player():
             closest_point.y = rect.y
         if closest_point.y > rect.y + rect.height:
             closest_point.y = rect.y + rect.height
+        return closest_point
 
-        return player.collides_point(closest_point)
+    def collides_with_rect(self, rect: pygame.Rect):
+        return player.collides_point(self.get_closest_point_to(rect))
 
     def collides_point(self, point: pygame.Vector2):
         x_dist = abs(self.pos.x - point.x)
         y_dist = abs(self.pos.y - point.y)
         return x_dist * x_dist + y_dist * y_dist < self.radius * self.radius
+
+    def stick_to(self, rect: pygame.Rect):
+        closest_point = self.get_closest_point_to(rect)
+        closest_point_rect = pygame.Vector2()
+        if closest_point.x < rect.x:
+            closest_point_rect.x = rect.x
+        elif closest_point.x > rect.x+rect.width:
+            closest_point_rect.x = rect.x+rect.width
+        else:
+            closest_point_rect.x = closest_point.x
+
+        if closest_point.y < rect.y:
+            closest_point_rect.y = rect.y
+        elif closest_point.y > rect.y+rect.height:
+            closest_point_rect.y = rect.y+rect.height
+        else:
+            closest_point_rect.y = closest_point.y
+
+        dist_x = closest_point.x - closest_point_rect.x
+        dist_y = closest_point.y - closest_point_rect.y
+
+        if dist_x >= 0:
+            dist_x += 1
+        else:
+            dist_x -= 1
+
+        if dist_y >= 0:
+            dist_y += 1
+        else:
+            dist_y -= 1
+
+        self.pos.x += dist_x
+        self.pos.y += dist_y
+        print("stick_to", closest_point, closest_point_rect)
 
 
 class Wall():
@@ -119,8 +154,10 @@ while running:
     else:
         is_jumping = False
         # TODO: getclosest point to new pos before collision
+        # try ro fix by shifting up first
         player.pos.x = player_pos.x
         player.pos.y = player_pos.y
+        player.stick_to(wall.get_box_collider())
     # flip() the display to put your work on screen
     pygame.display.flip()
 
